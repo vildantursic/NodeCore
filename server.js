@@ -27,13 +27,13 @@ var router = express.Router();              // get an instance of the express Ro
 // middleware to use for all requests
 router.use(function(req, res, next) {
     // do logging
-    console.log('Something is happening.');
+    console.log('You requested something.');
     next(); // make sure we go to the next routes and don't stop here
 });
 
 // test route to make sure everything is working (accessed at GET http://localhost:8080/api)
 router.get('/', function(req, res) {
-    res.json({ message: 'hooray! welcome to our api!' });   
+    res.json({ message: 'Welcome to Project Open API!' });
 });
 
 // more routes for our API will happen here
@@ -43,9 +43,11 @@ router.route('/pos')
 
     // create a po (accessed at POST http://localhost:8080/api/po)
     .post(function(req, res) {
-        
+
         var po = new Po();      // create a new instance of the Po model
         po.name = req.body.name;  // set the po name (comes from the request)
+        po.email = req.body.email; // set the po email (comes from the request)
+        po.status = req.body.status; // set the po status (comes from the request)
 
         // save the po and check for errors
         po.save(function(err) {
@@ -54,7 +56,7 @@ router.route('/pos')
 
             res.json({ message: 'Po created!' });
         });
-        
+
     })
     // get all the po (accessed at GET http://localhost:8080/api/po)
     .get(function(req, res) {
@@ -88,7 +90,10 @@ router.route('/pos/:po_id')
             if (err)
                 res.send(err);
 
-            po.name = req.body.name;  // update the pos info
+            // update the pos info
+            po.name = req.body.name;
+            po.email = req.body.email;
+            po.status = req.body.status;
 
             // save the po
             po.save(function(err) {
@@ -120,4 +125,4 @@ app.use('/api', router);
 // START THE SERVER
 // =============================================================================
 app.listen(port);
-console.log('Magic happens on port ' + port);
+console.log('listening on port: ' + port);
