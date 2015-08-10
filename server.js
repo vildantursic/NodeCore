@@ -8,8 +8,14 @@ var express    = require('express');        // call express
 var app        = express();                 // define our app using express
 var bodyParser = require('body-parser');
 var mongoose   = require('mongoose');
+var pg         = require('pg');
 
-var Po     = require('./app/models/po');
+var Po         = require('./app/models/po');
+
+//postgres connection string
+//examp: postgres://username:password@localhost/database
+var conString = "postgres://projop:@77.78.198.112:5432/projop";
+//postgres://projop:@77.78.198.112:5432/projop
 
 mongoose.connect('mongodb://vildantursic:sunce100@ds034198.mongolab.com:34198/po'); // connect to our database
 
@@ -116,6 +122,62 @@ router.route('/pos/:po_id')
             res.json({ message: 'Successfully deleted' });
         });
     });
+
+
+//POSTGRES SQL QUERY
+//examp: 'SELECT $1::int AS number'
+var myQuery = "select "+
+	"r.rel_id as id, "+
+	"(select username from users where user_id = r.object_id_two) as username, "+
+	"acs_object__name(o.object_id) as task, "+
+	"acs_object__get_attribute(o.object_id, 'note') as note, "+
+	"acs_object__get_attribute(cast(acs_object__get_attribute(o.object_id, 'parent_id') as integer), 'project_name') as project, "+
+	"acs_object__get_attribute(cast(acs_object__get_attribute(o.object_id, 'company_id') as integer), 'company_name') as company, "+
+	"cast(o.creation_date as timestamp) as assignment_date, "+
+	"cast(acs_object__get_attribute(o.object_id, 'creation_date') as timestamp) as creation_date, "+
+	"cast(acs_object__get_attribute(o.object_id, 'start_date') as timestamp) as start_date, "+
+	"cast((select end_date from im_projects where project_id = cast(acs_object__get_attribute(o.object_id, 'parent_id') as integer)) as timestamp) as end_date, "+
+	"cast((select deadline_date from im_timesheet_tasks where task_id = o.object_id) as timestamp) as deadline_date, "+
+	"(select percent_completed from im_projects where project_id = cast(acs_object__get_attribute(o.object_id, 'parent_id') as integer)) as percent_completed, "+
+	"(select category from im_categories where category_id = cast(acs_object__get_attribute(o.object_id, 'project_status_id') as integer)) as status "+
+"from "+
+	"acs_rels r, "+
+	"acs_object_types rt, "+
+	"acs_objects o, "+
+	"acs_object_types ot "+
+	"left outer join (select * from im_biz_object_urls where url_type = 'view') otu on otu.object_type = ot.object_type "+
+"where "+
+	"r.rel_type = rt.object_type and "+
+	"o.object_type = ot.object_type and "+
+	"r.object_id_one = o.object_id and "+
+	"o.object_type = 'im_timesheet_task' and "+
+	"r.rel_id > 0 "+
+"order by "+
+	"r.rel_id asc";
+
+router.route('/pg')
+    .get(function(req, res) {
+      pg.connect(conString, function(err, client, done) {
+
+        if (err) {
+          res.send('error fetching client from pool' + err);
+          //return console.error('error fetching client from pool', err);
+        }
+        client.query(myQuery, function(err, result) {
+          done();
+          if (err) {
+            res.send('error running query' + err);
+            //return console.error('error running query', err);
+          }
+          res.json(result);
+          //console.log("connection successfully established! " + result);
+        });
+
+      });
+    })
+
+
+
 
 
 // REGISTER OUR ROUTES -------------------------------
