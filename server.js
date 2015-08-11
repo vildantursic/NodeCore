@@ -33,6 +33,13 @@ var router = express.Router();              // get an instance of the express Ro
 // middleware to use for all requests
 router.use(function(req, res, next) {
     // do logging
+    //res.header("Access-Control-Allow-Origin", "*");
+    //res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+
     console.log('You requested something.');
     next(); // make sure we go to the next routes and don't stop here
 });
@@ -60,7 +67,9 @@ router.route('/pos')
             if (err)
                 res.send(err);
 
-            res.json({ message: 'Po created!' });
+            //res.json({ message: 'Po created!' });
+            console.log('Po created!');
+            res.json(po);
         });
 
     })
@@ -175,10 +184,6 @@ router.route('/pg')
 
       });
     })
-
-
-
-
 
 // REGISTER OUR ROUTES -------------------------------
 // all of our routes will be prefixed with /api
