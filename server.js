@@ -14,7 +14,7 @@ var Po         = require('./app/models/po');
 
 //postgres connection string
 //examp: postgres://username:password@localhost/database
-var conString = "postgres://projop:@77.78.198.112:5432/projop";
+var conString = "postgres://projop:@77.78.198.112:45432/projop";
 //postgres://projop:@77.78.198.112:5432/projop
 
 mongoose.connect('mongodb://vildantursic:sunce100@ds034198.mongolab.com:34198/po'); // connect to our database
@@ -36,9 +36,9 @@ router.use(function(req, res, next) {
     //res.header("Access-Control-Allow-Origin", "*");
     //res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
 
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    // res.header('Access-Control-Allow-Origin', '*');
+    // res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
+    // res.header('Access-Control-Allow-Headers', 'Content-Type');
 
     console.log('You requested something.');
     next(); // make sure we go to the next routes and don't stop here
@@ -135,7 +135,7 @@ router.route('/pos/:po_id')
 
 //POSTGRES SQL QUERY
 //examp: 'SELECT $1::int AS number'
-var myQuery = "select "+
+var poTasks = "select "+
 	"r.rel_id as id, "+
 	"(select username from users where user_id = r.object_id_two) as username, "+
 	"acs_object__name(o.object_id) as task, "+
@@ -164,7 +164,12 @@ var myQuery = "select "+
 "order by "+
 	"r.rel_id asc";
 
-router.route('/pg')
+var poUsers = "select * from users";
+
+var poProjects = "select * from im_projects";
+
+
+router.route('/pg/projects')
     .get(function(req, res) {
       pg.connect(conString, function(err, client, done) {
 
@@ -172,7 +177,7 @@ router.route('/pg')
           res.send('error fetching client from pool' + err);
           //return console.error('error fetching client from pool', err);
         }
-        client.query(myQuery, function(err, result) {
+        client.query(poProjects, function(err, result) {
           done();
           if (err) {
             res.send('error running query' + err);
@@ -183,7 +188,51 @@ router.route('/pg')
         });
 
       });
-    })
+    });
+
+
+router.route('/pg/tasks')
+    .get(function(req, res) {
+      pg.connect(conString, function(err, client, done) {
+
+        if (err) {
+          res.send('error fetching client from pool' + err);
+          //return console.error('error fetching client from pool', err);
+        }
+        client.query(poTasks, function(err, result) {
+          done();
+          if (err) {
+            res.send('error running query' + err);
+            //return console.error('error running query', err);
+          }
+          res.json(result);
+          //console.log("connection successfully established! " + result);
+        });
+
+      });
+    });
+
+
+router.route('/pg/users')
+    .get(function(req, res) {
+      pg.connect(conString, function(err, client, done) {
+
+        if (err) {
+          res.send('error fetching client from pool' + err);
+          //return console.error('error fetching client from pool', err);
+        }
+        client.query(poUsers, function(err, result) {
+          done();
+          if (err) {
+            res.send('error running query' + err);
+            //return console.error('error running query', err);
+          }
+          res.json(result);
+          //console.log("connection successfully established! " + result);
+        });
+
+      });
+    });
 
 // REGISTER OUR ROUTES -------------------------------
 // all of our routes will be prefixed with /api
