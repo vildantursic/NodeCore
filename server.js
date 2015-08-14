@@ -8,6 +8,7 @@ var express    = require('express');        // call express
 var app        = express();                 // define our app using express
 var bodyParser = require('body-parser');
 var mongoose   = require('mongoose');
+var ncache = require( "node-cache" );
 var pg         = require('pg');
 
 var Po         = require('./app/models/po');
@@ -16,6 +17,7 @@ var Po         = require('./app/models/po');
 //examp: postgres://username:password@localhost/database
 var conString = "postgres://projop:@77.78.198.112:45432/projop";
 //postgres://projop:@77.78.198.112:5432/projop
+var projopCache = new ncache();
 
 mongoose.connect('mongodb://vildantursic:sunce100@ds034198.mongolab.com:34198/po'); // connect to our database
 
@@ -33,8 +35,8 @@ var router = express.Router();              // get an instance of the express Ro
 // middleware to use for all requests
 router.use(function(req, res, next) {
     // do logging
-    //res.header("Access-Control-Allow-Origin", "*");
-    //res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Access-Control-Allow-Origin, X-Requested-With, Content-Type, Accept");
 
     // res.header('Access-Control-Allow-Origin', '*');
     // res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
@@ -164,7 +166,7 @@ var poTasks = "select "+
 "order by "+
 	"r.rel_id asc";
 
-var poUsers = "select * from users";
+var poUsers = "select * from users order by username asc";
 
 var poProjects = "select * from im_projects";
 
@@ -205,13 +207,43 @@ router.route('/pg/tasks')
             res.send('error running query' + err);
             //return console.error('error running query', err);
           }
-          res.json(result);
+          //res.json(result);
           //console.log("connection successfully established! " + result);
+          //cashing test
+          projopCache.set( "projopKey", result, function( err, success ){
+            if( !err && success ){
+              //console.log( success );
+              // true
+              // ... do something ...
+              res.json(success);
+            }
+          });
+
+
         });
 
       });
     });
 
+
+/* TESTING CASHING */
+
+router.route('/pg/cashed')
+    .get(function(req, res) {
+      projopCache.get( "projopKey", function( err, value ){
+        if( !err ){
+          if(value == undefined){
+            // key not found
+          }else{
+            res.json( value );
+            //{ my: "Special", variable: 42 }
+            // ... do something ...
+          }
+        }
+      });
+    });
+
+///////////////////////////////
 
 router.route('/pg/users')
     .get(function(req, res) {
