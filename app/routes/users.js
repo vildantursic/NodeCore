@@ -12,8 +12,8 @@ var conString = "postgres://projop:@77.78.198.112:45432/projop";
 
 var projopCache = new ncache();
 
-var poUsers = "select * from users order by username asc";
-var poUsersPost = "INSERT INTO users (user_id, username) VALUES ('12345678', 'testUserTest')";
+var poUsers = "select * from acs_users_all order by first_names asc";
+var poUsersPost = "INSERT INTO users (user_id, username) VALUES ($1, $2)";
 var poUsersPut = "UPDATE users SET username='Testing Update' WHERE user_id='12345678'";
 var poUsersDelete = "DELETE FROM users WHERE user_id='12345678' AND username='Testing Update'";
 
@@ -83,13 +83,15 @@ api.get(function(req,res){
 //POST verb
 api.post(function(req,res){
 
+    //console.log(req);
+
     pg.connect(conString, function(err, client, done) {
 
         if (err) {
             res.send('error fetching client from pool' + err);
             //return console.error('error fetching client from pool', err);
         }
-        client.query(poUsersPost, function(err, result) {
+        client.query(poUsersPost, [req.body.user_id, req.body.username],function(err, result) {
             done();
             if (err) {
                 res.send('error running query' + err);

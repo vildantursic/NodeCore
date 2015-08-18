@@ -13,6 +13,7 @@ var users = require('./app/routes/users').router;
 var tasks = require('./app/routes/tasks').router;
 var projects = require('./app/routes/projects').router;
 
+var test = require('./app/routes/test').router;
 
 // configure app to use bodyParser()
 // this will let us get the data from a POST
@@ -26,6 +27,8 @@ var port = process.env.PORT || 8080;        // set our port
 app.use('/', users);
 app.use('/', tasks);
 app.use('/', projects);
+
+app.use('/', test);
 
 // START THE SERVER
 // =============================================================================
